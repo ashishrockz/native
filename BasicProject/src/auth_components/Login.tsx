@@ -1,41 +1,64 @@
+import React, {useState} from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
+  SafeAreaView,
+  StyleSheet,
+  Image,
 } from 'react-native';
-import React, {useState} from 'react';
-const users = [
-  {id: 1, email: 'ram@gmail.com', password: '1qaz2wsx'},
-  {id: 2, email: 'ram12@gmail.com', password: '1qaz2wsx'},
-  {id: 3, email: 'ashish@gmail.com', password: '1qaz2wsx'},
-];
+import axios from 'axios';
+import {useAuth} from '../Hooks/Authentication'; // Import the custom hook
+
 interface ValidationError {
-  email?:string,
-  password?:string
+  email?: string;
+  password?: string;
 }
 const Login = ({navigation}: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const validation = () =>{
-    let error : ValidationError ={};
-    if(!email)error.email = 'Email is required';
-    if(!password)error.password = 'Email is required';
+  const [errors, setErrors] = useState<ValidationError>({});
 
-  }
-  const handeSubmit = () => {
-    const user = users.find(u => u.email === email && u.password === password);
-    if (user) {
-      Alert.alert('logined');
-    } else {
-      Alert.alert("the user doesn't exist");
-      navigation.navigate('Signup');
+  const {login} = useAuth(); // Access login function from context
+
+  const validation = (): ValidationError => {
+    let error: ValidationError = {};
+    if (!email) error.email = 'Email is required';
+    if (!password) error.password = 'Password is required';
+    return error;
+  };
+  const handleSubmit = async () => {
+    const validationErrors = validation();
+    setErrors(validationErrors);
+
+    try {
+      if (Object.keys(validationErrors).length === 0) {
+        const response = await axios.post(
+          'https://server-omega-umber.vercel.app/auth/login',
+          {
+            email,
+            password,
+          },
+        );
+
+        console.log('Signin successful:', response.data);
+        login(response.data.token);
+      }
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.status >= 400 &&
+        error.response.status <= 500
+      ) {
+        Alert.alert(error.response.data.message || 'Login failed');
+        setEmail('');
+        setPassword('');
+      }
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.heading_container}>
@@ -48,20 +71,22 @@ const Login = ({navigation}: any) => {
             style={styles.input_style}
             placeholder="Enter E-Mail"
             value={email}
-            onChangeText={text => setEmail(text)}
+            onChangeText={setEmail}
           />
-          <Text style={{color: 'red'}}>Please enter Email</Text>
+          {errors.email && <Text style={{color: 'red'}}>{errors.email}</Text>}
         </View>
-        <View style={styles.margin}> 
-          <Text style={styles.input_label}>Password:-</Text>
+        <View style={styles.margin}>
+          <Text style={styles.input_label}>Password:</Text>
           <TextInput
             style={styles.input_style}
             placeholder="Enter Password"
             value={password}
-            onChangeText={text => setPassword(text)}
+            onChangeText={setPassword}
             secureTextEntry
           />
-          <Text style={{color: 'red'}}>Please Enter Password</Text>
+          {errors.password && (
+            <Text style={{color: 'red'}}>{errors.password}</Text>
+          )}
         </View>
         <TouchableOpacity>
           <Text
@@ -74,14 +99,14 @@ const Login = ({navigation}: any) => {
             Forgot Password?
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handeSubmit}>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.button_text}>Submit</Text>
         </TouchableOpacity>
         <TouchableOpacity>
           <Text
             style={{textAlign: 'center', fontSize: 16}}
             onPress={() => navigation.navigate('Signup')}>
-            Creat Account
+            Create Account
           </Text>
         </TouchableOpacity>
       </View>
@@ -104,6 +129,7 @@ const Login = ({navigation}: any) => {
 };
 
 export default Login;
+
 const styles = StyleSheet.create({
   container: {
     padding: 10,
@@ -114,7 +140,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 28,
-    fontWeight: 700,
+    fontWeight: '700',
     textAlign: 'center',
   },
   form_container: {
@@ -122,8 +148,8 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     marginBottom: 50,
   },
-  margin:{
-    marginBottom:15,
+  margin: {
+    marginBottom: 15,
   },
   input_label: {
     fontSize: 18,

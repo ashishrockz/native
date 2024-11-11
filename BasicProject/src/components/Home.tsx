@@ -1,14 +1,18 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+// Home.tsx
+import React from 'react';
+import { View, Text, Button } from 'react-native';
 
-const Home = () => {
-  return (
-    <View>
-      <Text>Home</Text>
-    </View>
-  )
+interface HomeProps {
+  logout: () => Promise<void>;
 }
 
-export default Home
+const Home: React.FC<HomeProps> = ({ logout }) => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Home Screen</Text>
+      <Button title="Logout" onPress={logout} />
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({})
+export default Home;
