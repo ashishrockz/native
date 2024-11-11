@@ -1,9 +1,9 @@
-import Auth from "./src/navigations/Auth";
-import Main from "./src/navigations/Main";
+import MainNavigation from "./src/navigations/MainNavigation";
+
 
 const App = () => {
   return (
-    <Auth />
+    <MainNavigation />
   );
 };
 
