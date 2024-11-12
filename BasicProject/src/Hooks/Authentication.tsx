@@ -42,14 +42,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Inside your useAuth hook
 const logout = async (): Promise<void> => {
     try {
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.clear();
       console.log('logout successfully');
       setIsAuthenticated(false);
     } catch (error) {
       console.log('Error removing token:', error);
     }
   };
-``  
+
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, token, login, logout }}>
