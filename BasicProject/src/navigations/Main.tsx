@@ -4,6 +4,8 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from '../components/Home';
 import Settings from '../components/Settings';
 import { Image } from 'react-native';
+import Search from '../components/Search';
+import AddPost from '../components/AddPost';
 interface MainProps {
   logout: () => void;
 }
@@ -16,7 +18,7 @@ const Main: React.FC<MainProps> = ({logout}) => {
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarLabelPosition: 'below-icon',
+          tabBarPosition:'bottom',
           tabBarStyle: {
             backgroundColor: '#3B9678',
           },
@@ -36,6 +38,14 @@ const Main: React.FC<MainProps> = ({logout}) => {
         <Tab.Screen
           name="Home"
           component={Home}
+        />
+        <Tab.Screen
+          name="Search"
+          component={Search}
+        />
+        <Tab.Screen
+          name="Add"
+          component={AddPost}
         />
         <Tab.Screen name="Profile">
           {() => <Settings logout={logout} />}

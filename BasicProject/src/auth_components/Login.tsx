@@ -36,7 +36,7 @@ const Login = ({navigation}: any) => {
     try {
       if (Object.keys(validationErrors).length === 0) {
         const response = await axios.post(
-          'https://server-omega-umber.vercel.app/auth/login',
+          'https://social-chi-wine.vercel.app/auth/login',
           {
             email,
             password,

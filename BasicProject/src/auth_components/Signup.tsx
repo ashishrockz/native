@@ -12,7 +12,7 @@ import React, {useState} from 'react';
 import axios from 'axios';
 
 const Signup = ({navigation}: any) => {
-  const [fullName, setFullNmae] = useState('');
+  const [username, setFullNmae] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [conf_password, setConformPass] = useState('');
@@ -23,8 +23,8 @@ const Signup = ({navigation}: any) => {
     }
   
     try {
-      const response = await axios.post('https://server-omega-umber.vercel.app/auth/signup', {
-        fullName,
+      const response = await axios.post('https://social-chi-wine.vercel.app/auth/signup', {
+        username,
         email,
         password,
       });
@@ -64,8 +64,8 @@ const Signup = ({navigation}: any) => {
           <Text style={styles.input_label}>Full Name:</Text>
           <TextInput
             style={styles.input_style}
-            placeholder="Enter FullName"
-            value={fullName}
+            placeholder="Enter username"
+            value={username}
             onChangeText={setFullNmae}
           />
         </View>

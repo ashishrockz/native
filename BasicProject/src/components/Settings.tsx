@@ -6,94 +6,162 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface SettingsProps {
   logout: () => void;
 }
+
 const Settings: React.FC<SettingsProps> = ({logout}) => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true); // To manage loading state
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Get the token from AsyncStorage
+        const token = await AsyncStorage.getItem('token'); // Replace 'token' with your key
+        if (!token) {
+          console.error('No token found');
+          return;
+        }
+
+        // Fetch user data from API with token in Authorization header
+        const response = await fetch(
+          'https://social-chi-wine.vercel.app/auth/me',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Fetched user data:', data); // Debug log
+        setUser(data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false); // Set loading to false once data is fetched
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
-      <TouchableOpacity style={styles.back}>
-        <Image
-          source={require('../assets/back.png')}
-          style={{width: 35, height: 35}}
-        />
-        <Text style={{fontSize: 18, marginLeft: 8}}>Back</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.back}  onPress={logout}>
-        <Image
-          source={require('../assets/logout.png')}
-          style={{width: 35, height: 35}}
-        />
-        <Text style={{fontSize: 18, marginLeft: 8}}>LogOut</Text>
-      </TouchableOpacity>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        {/* <TouchableOpacity style={styles.back}>
+          <Image
+            source={require('../assets/back.png')}
+            style={{ width: 35, height: 35 }}
+          />
+          <Text style={{ fontSize: 18, marginLeft: 8 }}>Back</Text>
+        </TouchableOpacity> */}
+        <Text style={{fontSize: 18, fontWeight: '700'}}>{user.username}</Text>
+        <TouchableOpacity style={styles.back} onPress={logout}>
+          <Image
+            source={require('../assets/logout.png')}
+            style={{width: 35, height: 35}}
+          />
+          <Text style={{fontSize: 18, marginLeft: 8}}>LogOut</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.profile}>
-        <View style={styles.profilecontainer}>
-          <Image
-            source={require('../assets/profile/3.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
+
+      {user ? (
+        <View>
+          <View style={styles.profile}>
+            <View style={styles.profilecontainer}>
+              <Image
+                source={require('../assets/profile/3.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+              <View style={styles.fololwer_text}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                  }}>
+                  100
+                </Text>
+                <Text style={{fontSize: 13, textAlign: 'center'}}>
+                  Following
+                </Text>
+              </View>
+              <View style={styles.fololwer_text}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                  }}>
+                  100M
+                </Text>
+                <Text style={{fontSize: 13, textAlign: 'center'}}>
+                  Followers
+                </Text>
+              </View>
+              <View style={styles.fololwer_text}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                  }}>
+                  {user.post}
+                </Text>
+                <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
+              </View>
+          </View>
+          <View style={styles.highilets}>
+            <View style={styles.highilets_con}>
+              <Image
+                source={require('../assets/profile/1.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+            <View style={styles.highilets_con}>
+              <Image
+                source={require('../assets/profile/2.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+            <View style={styles.highilets_con}>
+              <Image
+                source={require('../assets/profile/4.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+            <View style={styles.highilets_con}>
+              <Image
+                source={require('../assets/profile/5.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+            <View style={styles.highilets_con}>
+              <Image
+                source={require('../assets/profile/7.jpeg')}
+                style={{width: 70, height: 70, borderRadius: 50}}
+              />
+            </View>
+          </View>
         </View>
-        <View style={styles.profile_text}>
-          <Text style={{fontSize: 18, fontWeight: '700'}}>Chuchel Ashish</Text>
-          <Text>@actor</Text>
-        </View>
-      </View>
-      <View style={styles.follwers}>
-        <View style={styles.fololwer_text}>
-          <Text style={{fontSize: 18, fontWeight: '700', textAlign: 'center'}}>
-            100
-          </Text>
-          <Text style={{fontSize: 13, textAlign: 'center'}}>Following</Text>
-        </View>
-        <View style={styles.fololwer_text}>
-          <Text style={{fontSize: 18, fontWeight: '700', textAlign: 'center'}}>
-            100M
-          </Text>
-          <Text style={{fontSize: 13, textAlign: 'center'}}>Followers</Text>
-        </View>
-        <View style={styles.fololwer_text}>
-          <Text style={{fontSize: 18, fontWeight: '700', textAlign: 'center'}}>
-            29
-          </Text>
-          <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
-        </View>
-      </View>
-      <View style={styles.highilets}>
-        <View style={styles.highilets_con}>
-          <Image
-            source={require('../assets/profile/1.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
-        </View>
-        <View style={styles.highilets_con}>
-          <Image
-            source={require('../assets/profile/2.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
-        </View>
-        <View style={styles.highilets_con}>
-          <Image
-            source={require('../assets/profile/4.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
-        </View>
-        <View style={styles.highilets_con}>
-          <Image
-            source={require('../assets/profile/5.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
-        </View>
-        <View style={styles.highilets_con}>
-          <Image
-            source={require('../assets/profile/7.jpeg')}
-            style={{width: 70, height: 70, borderRadius: 50}}
-          />
-        </View>
-      </View>
+      ) : (
+        <Text>Unable to load user data</Text>
+      )}
     </SafeAreaView>
   );
 };
@@ -114,43 +182,29 @@ const styles = StyleSheet.create({
   profile: {
     margin: 10,
     flexDirection: 'row',
+    justifyContent:'space-between',
+    alignItems:'center'
+
   },
   profilecontainer: {
     padding: 3,
     borderWidth: 4,
-    borderRadius: '50%',
+    borderRadius: 50,
     borderColor: '#2B8761',
   },
-  profile_text: {
-    margin: 5,
-    paddingLeft: 10,
-  },
+
   follwers: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
   },
   fololwer_text: {
     margin: 5,
   },
-  bottom_container: {
-    justifyContent: 'flex-end',
-  },
-  highilets:{
-    flexDirection:"row"
-  },
-  highilets_con:{
-    margin:5,
-  },
-  down_button: {
-    borderWidth: 4,
-    alignItems: 'center',
-    borderColor: '#f1f1f1',
-    backgroundColor: '#3B9678',
-    borderRadius: 40,
+  highilets: {
     flexDirection: 'row',
-    padding: 10,
-    justifyContent: 'center',
-    margin: 20,
+  },
+  highilets_con: {
+    margin: 5,
   },
 });
