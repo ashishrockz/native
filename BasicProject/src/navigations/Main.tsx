@@ -43,7 +43,7 @@ const Main: React.FC<MainProps> = ({logout}) => {
           name="Search"
           component={Search}
         />
-        <Tab.Screen
+      <Tab.Screen
           name="Add"
           component={AddPost}
         />
@@ -51,6 +51,7 @@ const Main: React.FC<MainProps> = ({logout}) => {
           {() => <Settings logout={logout} />}
         </Tab.Screen>
       </Tab.Navigator>
+      
     </NavigationContainer>
   );
 };

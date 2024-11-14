@@ -50,8 +50,11 @@ const Login = ({navigation}: any) => {
       if (
         error.response &&
         error.response.status >= 400 &&
-        error.response.status <= 500
+        error.response.status <= 500  
       ) {
+        if (error.response.status == 404) {
+          navigation.navigate('Signup');
+        }
         Alert.alert(error.response.data.message || 'Login failed');
         setEmail('');
         setPassword('');

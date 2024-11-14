@@ -69,7 +69,8 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
           />
           <Text style={{ fontSize: 18, marginLeft: 8 }}>Back</Text>
         </TouchableOpacity> */}
-        <Text style={{fontSize: 18, fontWeight: '700'}}>{user.username}</Text>
+        {user ? (
+        <Text style={{fontSize: 18, fontWeight: '700'}}>{user.username}</Text>):( <Text>unable to load data plesa login again</Text>)}
         <TouchableOpacity style={styles.back} onPress={logout}>
           <Image
             source={require('../assets/logout.png')}

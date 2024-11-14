@@ -54,6 +54,12 @@ const Search = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={require('../assets/Posts/logo.png')}
+          style={styles.logo}
+        />
+      </View>
       <View style={styles.search}>
         <Image
           source={require('../assets/Posts/search.png')}
@@ -100,6 +106,18 @@ const styles = StyleSheet.create({
   container: {
     margin: 10,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderColor: '#f1f1f1',
+    paddingRight: 10,
+  },
+  logo: {
+    width: 150,
+    height: 60,
+  },
   search: {
     borderWidth: 2,
     alignItems: 'center',
@@ -117,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    margin: 5,
+    margin: 2,
     borderRadius: 50,
     padding: 10,
     elevation: 10,
