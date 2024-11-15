@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import Auth from './Auth';
 import Main from './Main';
-import { useAuth } from '../Hooks/Authentication';  // Import the custom hook
+import { useAuth } from '../Hooks/Authentication'; 
 
 const MainNavigation = () => {
   const [loading, setLoading] = useState(true);

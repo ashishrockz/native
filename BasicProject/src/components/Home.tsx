@@ -37,7 +37,7 @@ const Home: React.FC = () => {
         }
 
         const response = await fetch(
-          'https://social-chi-wine.vercel.app/posts',
+          'https://backend-api-social.vercel.app/all',
           {
             method: 'GET',
             headers: {

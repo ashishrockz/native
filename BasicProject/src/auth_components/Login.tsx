@@ -36,7 +36,7 @@ const Login = ({navigation}: any) => {
     try {
       if (Object.keys(validationErrors).length === 0) {
         const response = await axios.post(
-          'https://social-chi-wine.vercel.app/auth/login',
+          'https://backend-api-social.vercel.app/auth/login',
           {
             email,
             password,
@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
     borderColor: '#F2F2F2',
     fontSize: 18,
     padding: 10,
+    color:'black'
   },
   button: {
     backgroundColor: '#2B8761',

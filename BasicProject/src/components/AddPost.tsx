@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import React, { useState } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPost = () => {
@@ -17,13 +16,13 @@ const AddPost = () => {
   const [caption, setCaption] = useState('');
 
   const pickImage = () => {
-    console.log('Opening image picker'); // Add this line for debugging
+    console.log('Opening image picker');
     launchImageLibrary(
       {
         mediaType: 'photo',
       },
       (response) => {
-        console.log('Image picker response:', response); // Add this for debugging
+        console.log('Image picker response:', response);
         if (response.didCancel) {
           console.log('User cancelled image picker');
         } else if (response.errorCode) {
@@ -38,15 +37,13 @@ const AddPost = () => {
       }
     );
   };
-  
-  
 
   const uploadPost = async () => {
     if (!imageUri || !caption) {
       Alert.alert('Please select an image and enter a caption.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', {
       uri: imageUri,
@@ -54,25 +51,25 @@ const AddPost = () => {
       name: 'photo.jpg',
     });
     formData.append('content', caption);
-    
-  const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          console.error('No token found');
-          return;
-        }
+
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
+
     try {
-      const response = await fetch('https://social-chi-wine.vercel.app/posts', {
+      const response = await fetch('https://backend-api-social.vercel.app/posts', {
         method: 'POST',
         headers: {
-          'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
-    
+
       const responseData = await response.json();
-      console.log('Upload response:', responseData); // Add this line to debug server response
-    
+      console.log('Upload response:', responseData);
+
       if (response.ok) {
         console.log('Upload success:', responseData);
         Alert.alert('Post uploaded successfully!');
@@ -82,12 +79,12 @@ const AddPost = () => {
         console.error('Error response from server:', responseData);
         Alert.alert('Failed to upload post. Please check server logs.');
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.error('Upload failed:', error.message);
       Alert.alert('Failed to upload post. Please try again.');
     }
-    
   };
+
   return (
     <View>
       <View style={styles.header}>

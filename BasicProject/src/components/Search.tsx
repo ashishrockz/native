@@ -27,7 +27,7 @@ const Search = () => {
 
         // Fetch user data from API with the Authorization header
         const response = await axios.get(
-          'https://social-chi-wine.vercel.app/auth/users',
+          'https://backend-api-social.vercel.app/auth/users',
           {
             headers: {
               Authorization: `Bearer ${token}`,

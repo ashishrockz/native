@@ -23,7 +23,7 @@ const Signup = ({navigation}: any) => {
     }
   
     try {
-      const response = await axios.post('https://social-chi-wine.vercel.app/auth/signup', {
+      const response = await axios.post('https://backend-api-social.vercel.app/auth/signup', {
         username,
         email,
         password,

@@ -29,7 +29,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
         // Fetch user data from API with token in Authorization header
         const response = await fetch(
-          'https://social-chi-wine.vercel.app/auth/me',
+          'https://backend-api-social.vercel.app/auth/me',
           {
             method: 'GET',
             headers: {
