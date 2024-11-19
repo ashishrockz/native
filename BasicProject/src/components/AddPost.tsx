@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPost = () => {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [caption, setCaption] = useState('');
+  const [content, setcontent] = useState('');
 
   const pickImage = () => {
     console.log('Opening image picker');
@@ -39,52 +39,58 @@ const AddPost = () => {
   };
 
   const uploadPost = async () => {
-    if (!imageUri || !caption) {
-      Alert.alert('Please select an image and enter a caption.');
+    if (!imageUri || !content) {
+      Alert.alert('Please select an image and enter a content.');
       return;
     }
-
+  
+    // Improved file type extraction
+    const fileType = imageUri.split('.').pop();
+    const mimeType = `image/${fileType}`; // Ensure it is image/jpeg, image/png, etc.
+  
     const formData = new FormData();
-    formData.append('file', {
+    formData.append('image', {
       uri: imageUri,
-      type: 'image/jpeg',
-      name: 'photo.jpg',
+      type: mimeType, // Using extracted file type
+      name: `photo.${fileType}`,
     });
-    formData.append('content', caption);
-
+    formData.append('content', content);
+  
     const token = await AsyncStorage.getItem('token');
     if (!token) {
       console.error('No token found');
       return;
     }
-
+  
     try {
-      const response = await fetch('https://backend-api-social.vercel.app/posts', {
+      const response = await fetch('http://3.110.47.11:5000/create-post', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
-
+  
       const responseData = await response.json();
-      console.log('Upload response:', responseData);
-
       if (response.ok) {
-        console.log('Upload success:', responseData);
         Alert.alert('Post uploaded successfully!');
         setImageUri(null);
-        setCaption('');
+        setcontent('');
       } else {
         console.error('Error response from server:', responseData);
         Alert.alert('Failed to upload post. Please check server logs.');
+        setImageUri(null);
+        setcontent('');
       }
-    } catch (error: any) {
+    } catch (error:any) {
       console.error('Upload failed:', error.message);
       Alert.alert('Failed to upload post. Please try again.');
+      setImageUri(null);
+      setcontent('');
     }
   };
-
+  
+  
   return (
     <View>
       <View style={styles.header}>
@@ -102,10 +108,10 @@ const AddPost = () => {
             multiline={true}
             numberOfLines={4}
             style={styles.textInput}
-            placeholder="Write some caption for your post"
+            placeholder="Write some content for your post"
             placeholderTextColor={'black'}
-            value={caption}
-            onChangeText={setCaption}
+            value={content}
+            onChangeText={setcontent}
           />
         </View>
       </View>

@@ -1,6 +1,9 @@
 import {
+  FlatList,
   Image,
+  Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,14 +11,28 @@ import {
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Alert} from 'react-native';
 
 interface SettingsProps {
   logout: () => void;
 }
+interface User {
+  _id: string;
+  username: string;
+}
 
+interface Post {
+  _id: string;
+  user: User;
+  content: string;
+  imageUrl: string;
+  likes: string[];
+  comments: string[];
+}
 const Settings: React.FC<SettingsProps> = ({logout}) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // To manage loading state
+  const [post, setPost] = useState<Post[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,7 +71,120 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
     fetchUserData();
   }, []);
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        // Get the token from AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          console.error('No token found');
+          return;
+        }
 
+        // Make sure you have user data loaded
+        if (!user || !user._id) {
+          console.error('User data is not loaded');
+          return;
+        }
+
+        // Adjust the API endpoint to fetch posts by user ID
+        const response = await fetch(
+          `https://backend-api-social.vercel.app/user`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        const data: Post[] = await response.json();
+        console.log('Fetched user posts:', data); // Debug log
+        setPost(data);
+      } catch (error) {
+        console.error('Error fetching user posts:', error);
+        Alert.alert('Error', 'Failed to fetch posts. Please try again later.');
+      }
+    };
+
+    fetchPosts();
+    const interval = setInterval(() => {
+      fetchPosts();
+    }, 100000); // 10000ms = 10 seconds
+  
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(interval);
+  }, [user]); // Make sure the effect runs when `user` changes
+  const handleEdit = async (postId: string, newContent: string) => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://backend-api-social.vercel.app/edit/${postId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: newContent }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert('Success', 'Post updated successfully!');
+        setPost((prevPosts) =>
+          prevPosts.map((p) =>
+            p._id === postId ? { ...p, content: newContent } : p
+          )
+        );
+      } else {
+        Alert.alert('Error', 'Failed to update post');
+      }
+    } catch (error) {
+      console.error('Error editing post:', error);
+      Alert.alert('Error', 'Failed to update post');
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://backend-api-social.vercel.app/delete/${postId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        Alert.alert('Success', 'Post deleted successfully!');
+        setPost((prevPosts) => prevPosts.filter((p) => p._id !== postId));
+      } else {
+        Alert.alert('Error', 'Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      Alert.alert('Error', 'Failed to delete post');
+    }
+  };
   if (loading) {
     return <Text>Loading...</Text>;
   }
@@ -70,7 +200,10 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
           <Text style={{ fontSize: 18, marginLeft: 8 }}>Back</Text>
         </TouchableOpacity> */}
         {user ? (
-        <Text style={{fontSize: 18, fontWeight: '700'}}>{user.username}</Text>):( <Text>unable to load data plesa login again</Text>)}
+          <Text style={{fontSize: 18, fontWeight: '700'}}>{user.username}</Text>
+        ) : (
+          <Text>unable to load data plesa login again</Text>
+        )}
         <TouchableOpacity style={styles.back} onPress={logout}>
           <Image
             source={require('../assets/logout.png')}
@@ -89,75 +222,140 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                 style={{width: 70, height: 70, borderRadius: 50}}
               />
             </View>
-              <View style={styles.fololwer_text}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    textAlign: 'center',
-                  }}>
-                  100
-                </Text>
-                <Text style={{fontSize: 13, textAlign: 'center'}}>
-                  Following
-                </Text>
-              </View>
-              <View style={styles.fololwer_text}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    textAlign: 'center',
-                  }}>
-                  100M
-                </Text>
-                <Text style={{fontSize: 13, textAlign: 'center'}}>
-                  Followers
-                </Text>
-              </View>
-              <View style={styles.fololwer_text}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    textAlign: 'center',
-                  }}>
-                  {user.post}
-                </Text>
-                <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
-              </View>
+            <View style={styles.fololwer_text}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}>
+                100
+              </Text>
+              <Text style={{fontSize: 13, textAlign: 'center'}}>Following</Text>
+            </View>
+            <View style={styles.fololwer_text}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}>
+                100M
+              </Text>
+              <Text style={{fontSize: 13, textAlign: 'center'}}>Followers</Text>
+            </View>
+            <View style={styles.fololwer_text}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}>
+                {user.post}
+              </Text>
+              <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
+            </View>
           </View>
           <View style={styles.highilets}>
-            <View style={styles.highilets_con}>
-              <Image
-                source={require('../assets/profile/1.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
-              />
+            <Text>Highligts</Text>
+            <ScrollView horizontal={true} style={styles.highilets1}>
+              <View style={styles.highilets_con}>
+                <Image
+                  source={require('../assets/profile/1.jpeg')}
+                  style={{width: 70, height: 70, borderRadius: 50}}
+                />
+              </View>
+              <View style={styles.highilets_con}>
+                <Image
+                  source={require('../assets/profile/2.jpeg')}
+                  style={{width: 70, height: 70, borderRadius: 50}}
+                />
+              </View>
+              <View style={styles.highilets_con}>
+                <Image
+                  source={require('../assets/profile/4.jpeg')}
+                  style={{width: 70, height: 70, borderRadius: 50}}
+                />
+              </View>
+              <View style={styles.highilets_con}>
+                <Image
+                  source={require('../assets/profile/5.jpeg')}
+                  style={{width: 70, height: 70, borderRadius: 50}}
+                />
+              </View>
+              <View style={styles.highilets_con}>
+                <Image
+                  source={require('../assets/profile/7.jpeg')}
+                  style={{width: 70, height: 70, borderRadius: 50}}
+                />
+              </View>
+            </ScrollView>
+          </View>
+          <View style={{height:"65%"}}>
+            <View>
+              <Text>Posts</Text>
             </View>
-            <View style={styles.highilets_con}>
-              <Image
-                source={require('../assets/profile/2.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
-              />
-            </View>
-            <View style={styles.highilets_con}>
-              <Image
-                source={require('../assets/profile/4.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
-              />
-            </View>
-            <View style={styles.highilets_con}>
-              <Image
-                source={require('../assets/profile/5.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
-              />
-            </View>
-            <View style={styles.highilets_con}>
-              <Image
-                source={require('../assets/profile/7.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
-              />
-            </View>
+            <FlatList
+              data={post}
+              keyExtractor={item => item._id}
+              renderItem={({item}) => (
+                <View style={styles.postContainer}>
+                  <View style={styles.postHeader}>
+                      <Image
+                        source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
+                        style={styles.profileImage}
+                      />
+                      <Text style={styles.username}>
+                        {user?.username || 'Unknown User'}
+                      </Text>
+                      <TouchableOpacity onPress={() => handleEdit(item._id, 'New content')}>
+                        <Text>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDelete(item._id)} >
+                        <Text>Delete</Text>
+                      </TouchableOpacity>
+                  </View>
+                  {item.imageUrl ? (
+                    <View style={styles.postImageContainer}>
+                      <Image
+                        source={{uri: item.imageUrl}}
+                        style={styles.postImage}
+                      />
+                    </View>
+                  ) : null}
+                  <View style={styles.postContent}>
+                    <Text>{item.content}</Text>
+                  </View>
+                  <View style={styles.postActions}>
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Image
+                        source={require('../assets/Posts/love.png')}
+                        style={styles.actionIcon}
+                      />
+                      <Text style={{paddingLeft: 5, fontSize: 18}}>
+                        {item.likes?.length || 0}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Image
+                        source={require('../assets/Posts/chat.png')}
+                        style={styles.actionIcon}
+                      />
+                      <Text style={{paddingLeft: 5, fontSize: 18}}>
+                        {item.comments?.length || 0}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Image
+                        source={require('../assets/Posts/save.png')}
+                        style={styles.actionIcon}
+                      />
+                      <Text>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
           </View>
         </View>
       ) : (
@@ -183,9 +381,8 @@ const styles = StyleSheet.create({
   profile: {
     margin: 10,
     flexDirection: 'row',
-    justifyContent:'space-between',
-    alignItems:'center'
-
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   profilecontainer: {
     padding: 3,
@@ -203,9 +400,61 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   highilets: {
+    borderTopWidth: 1,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: 'grey',
+  },
+  highilets1: {
     flexDirection: 'row',
   },
   highilets_con: {
     margin: 5,
+  },
+  postContainer: {
+    padding: 10,
+    backgroundColor: '#ffffff',
+    elevation: 20,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+  postHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent:'space-around'
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+  },
+  username: {
+    fontSize: 18,
+  },
+  postImageContainer: {
+    paddingTop: 10,
+  },
+  postImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 20,
+  },
+  postContent: {
+    padding: 10,
+  },
+  postActions: {
+    paddingRight: 10,
+    paddingLeft: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  actionIcon: {
+    width: 25,
+    height: 25,
   },
 });

@@ -35,7 +35,7 @@ const Home: React.FC = () => {
           console.error('No token found');
           return;
         }
-
+  
         const response = await fetch(
           'https://backend-api-social.vercel.app/all',
           {
@@ -45,25 +45,34 @@ const Home: React.FC = () => {
             },
           },
         );
-
+  
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
-
+  
         const data: Post[] = await response.json();
-        console.log('Fetched user data:', data); // Debug log
+        console.log('Fetched user posts:', data); // Debug log
         setPost(data);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to fetch data. Please try again later.');
+      } catch (error: any) {
+        console.error('Error fetching posts:', error);
+        Alert.alert('Error', 'Failed to fetch posts. Please try again later.');
       }
     };
-
+  
+    // Initial fetch of posts
     fetchPosts();
-  }, []); 
-
+  
+    // Set interval to fetch posts every 10 seconds
+    const interval = setInterval(() => {
+      fetchPosts();
+    }, 100000); // 10000ms = 10 seconds
+  
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
-    <View style={{padding: 10, backgroundColor: '#ffffff'}}>
+    <View style={{padding: 10, backgroundColor: '#ffffff',height:'99%'}}>
       <View style={styles.header}>
         <Image
           source={require('../assets/Posts/logo.png')}
@@ -166,11 +175,11 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   postImageContainer: {
-    padding: 10,
+    paddingTop: 10,
   },
   postImage: {
     width: '100%',
-    height: 400,
+    height: 250,
     borderRadius: 20,
   },
   postContent: {
