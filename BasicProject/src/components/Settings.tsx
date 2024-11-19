@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -9,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState,useRef} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert} from 'react-native';
 
@@ -60,7 +61,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
         }
 
         const data = await response.json();
-        console.log('Fetched user data:', data); // Debug log
+        // console.log('Fetched user data:', data); // Debug log
         setUser(data);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -81,12 +82,6 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
           return;
         }
 
-        // Make sure you have user data loaded
-        if (!user || !user._id) {
-          console.error('User data is not loaded');
-          return;
-        }
-
         // Adjust the API endpoint to fetch posts by user ID
         const response = await fetch(
           `https://backend-api-social.vercel.app/user`,
@@ -103,10 +98,9 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
         }
 
         const data: Post[] = await response.json();
-        console.log('Fetched user posts:', data); // Debug log
+        // console.log('Fetched user posts:', data); // Debug log
         setPost(data);
       } catch (error) {
-        console.error('Error fetching user posts:', error);
         Alert.alert('Error', 'Failed to fetch posts. Please try again later.');
       }
     };
@@ -114,8 +108,8 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
     fetchPosts();
     const interval = setInterval(() => {
       fetchPosts();
-    }, 100000); // 10000ms = 10 seconds
-  
+    }, 10000); // 10000ms = 10 seconds
+
     // Cleanup function to clear the interval when the component unmounts
     return () => clearInterval(interval);
   }, [user]); // Make sure the effect runs when `user` changes
@@ -135,17 +129,17 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ content: newContent }),
-        }
+          body: JSON.stringify({content: newContent}),
+        },
       );
 
       const data = await response.json();
       if (response.ok) {
         Alert.alert('Success', 'Post updated successfully!');
-        setPost((prevPosts) =>
-          prevPosts.map((p) =>
-            p._id === postId ? { ...p, content: newContent } : p
-          )
+        setPost(prevPosts =>
+          prevPosts.map(p =>
+            p._id === postId ? {...p, content: newContent} : p,
+          ),
         );
       } else {
         Alert.alert('Error', 'Failed to update post');
@@ -171,12 +165,12 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
         Alert.alert('Success', 'Post deleted successfully!');
-        setPost((prevPosts) => prevPosts.filter((p) => p._id !== postId));
+        setPost(prevPosts => prevPosts.filter(p => p._id !== postId));
       } else {
         Alert.alert('Error', 'Failed to delete post');
       }
@@ -186,7 +180,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
     }
   };
   if (loading) {
-    return <Text>Loading...</Text>;
+    return <ActivityIndicator  style={{flex:1,justifyContent:"center"}}size="small" color="#0000ff" />;
   }
 
   return (
@@ -251,7 +245,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                   fontWeight: '700',
                   textAlign: 'center',
                 }}>
-                {user.post}
+                {post.length}
               </Text>
               <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
             </View>
@@ -291,16 +285,17 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
               </View>
             </ScrollView>
           </View>
-          <View style={{height:"65%"}}>
-            <View>
+          <View style={{height: '63.5%'}}>
+            {/* <View>
               <Text>Posts</Text>
-            </View>
+            </View> */}
             <FlatList
               data={post}
               keyExtractor={item => item._id}
               renderItem={({item}) => (
                 <View style={styles.postContainer}>
                   <View style={styles.postHeader}>
+                    <View style={{flexDirection:'row',alignItems:'center'}}>
                       <Image
                         source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
                         style={styles.profileImage}
@@ -308,12 +303,16 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                       <Text style={styles.username}>
                         {user?.username || 'Unknown User'}
                       </Text>
-                      <TouchableOpacity onPress={() => handleEdit(item._id, 'New content')}>
-                        <Text>Edit</Text>
+                    </View>
+                    <View style={{width:100,flexDirection:'row',alignItems:'center', justifyContent:"space-between"}}>
+                      <TouchableOpacity
+                        onPress={() => handleEdit(item._id, 'New content')}>
+                        <Text >Edit</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDelete(item._id)} >
-                        <Text>Delete</Text>
+                      <TouchableOpacity  onPress={() => handleDelete(item._id)}>
+                        <Text >Delete</Text>
                       </TouchableOpacity>
+                    </View>
                   </View>
                   {item.imageUrl ? (
                     <View style={styles.postImageContainer}>
@@ -403,7 +402,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     padding: 10,
     borderBottomWidth: 1,
-    borderColor: 'grey',
+    borderColor: '#ccc',
   },
   highilets1: {
     flexDirection: 'row',
@@ -412,16 +411,19 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   postContainer: {
-    padding: 10,
+    paddingTop:10,
+    paddingBottom:10,
     backgroundColor: '#ffffff',
     elevation: 20,
     borderRadius: 10,
-    marginTop: 5,
+    marginTop: 10,
   },
   postHeader: {
+    paddingLeft:5,
+    paddingRight:10,
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent:'space-around'
+    justifyContent:'space-between'
   },
   profileImage: {
     width: 50,
@@ -430,13 +432,14 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 18,
+    paddingLeft: 20,
   },
   postImageContainer: {
     paddingTop: 10,
   },
   postImage: {
     width: '100%',
-    height: 250,
+    height: 400,
     borderRadius: 20,
   },
   postContent: {

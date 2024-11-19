@@ -78,7 +78,7 @@ const AddPost = () => {
         setcontent('');
       } else {
         console.error('Error response from server:', responseData);
-        Alert.alert('Failed to upload post. Please check server logs.');
+        Alert.alert('Failed to upload post. Please check server logs.', responseData);
         setImageUri(null);
         setcontent('');
       }

@@ -24,14 +24,21 @@ const Main: React.FC<MainProps> = ({logout}) => {
           },
           tabBarActiveTintColor: 'white',    
           tabBarInactiveTintColor: 'white',
-          tabBarIcon: () => {
+          tabBarIcon: ({ focused }) => {
             let iconSource;
             if (route.name === 'Home') {
-              iconSource =  require('../assets/Home.png');
+              iconSource = require('../assets/Home.png');
             } else if (route.name === 'Profile') {
-              iconSource =  require('../assets/user.png');
+              iconSource = require('../assets/user.png');
+            } else if (route.name === 'Search') {
+              iconSource = require('../assets/Posts/search.png');
+            } else if (route.name === 'Add') {
+              iconSource = require('../assets/Posts/add.png');
             }
-            return <Image source={iconSource} style={{ width: 25, height: 25 }} />;
+            return<Image
+            source={iconSource}
+            style={{ width: 25, height: 25, tintColor: focused ? 'grey' : '#ffffff' }}
+          />
           },
         })}
       >

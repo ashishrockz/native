@@ -51,10 +51,9 @@ const Home: React.FC = () => {
         }
   
         const data: Post[] = await response.json();
-        console.log('Fetched user posts:', data); // Debug log
+        // console.log('Fetched user posts:', data); // Debug log
         setPost(data);
       } catch (error: any) {
-        console.error('Error fetching posts:', error);
         Alert.alert('Error', 'Failed to fetch posts. Please try again later.');
       }
     };
@@ -65,14 +64,14 @@ const Home: React.FC = () => {
     // Set interval to fetch posts every 10 seconds
     const interval = setInterval(() => {
       fetchPosts();
-    }, 100000); // 10000ms = 10 seconds
+    }, 10000); // 10000ms = 10 seconds
   
     // Cleanup function to clear the interval when the component unmounts
     return () => clearInterval(interval);
   }, []);
   
   return (
-    <View style={{padding: 10, backgroundColor: '#ffffff',height:'99%'}}>
+    <View style={{padding: 10, backgroundColor: '#f1f1f1',height:'99.5%'}}>
       <View style={styles.header}>
         <Image
           source={require('../assets/Posts/logo.png')}
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderColor: '#f1f1f1',
+    borderColor: '#ccccc1',
     paddingRight: 10,
   },
   logo: {
@@ -155,13 +154,15 @@ const styles = StyleSheet.create({
     height: 25,
   },
   postContainer: {
-    padding: 10,
+    paddingTop:10,
+    paddingBottom:10,
     backgroundColor: '#ffffff',
     elevation: 20,
     borderRadius: 10,
-    marginTop: 5,
+    marginTop: 10,
   },
   postHeader: {
+    paddingLeft:20,
     alignItems: 'center',
     flexDirection: 'row',
   },
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 250,
+    height: 400,
     borderRadius: 20,
   },
   postContent: {
