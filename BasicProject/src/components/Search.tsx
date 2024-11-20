@@ -65,7 +65,7 @@ const Search = () => {
           source={require('../assets/Posts/search.png')}
           style={{ width: 25, height: 25 }}
         />
-        <TextInput style={styles.search_input} placeholder="Search users..." />
+        <TextInput style={styles.search_input} placeholderTextColor={'black'}  placeholder="Search users..." />
         <TouchableOpacity>
           <Image
             source={require('../assets/Posts/remove.png')}
@@ -125,11 +125,14 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     flexDirection: 'row',
     marginBottom: 10,
+    color:'black'
+
   },
   search_input: {
     width: '85%',
     height: 40,
     fontSize: 17,
+    color:'black'
   },
   userCard: {
     flexDirection: 'row',

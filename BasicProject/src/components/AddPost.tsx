@@ -6,9 +6,10 @@ import {
   TextInput,
   View,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
-import React, { useState } from 'react';
-import { launchImageLibrary } from 'react-native-image-picker';
+import React, {useState} from 'react';
+import {launchImageLibrary} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPost = () => {
@@ -21,7 +22,7 @@ const AddPost = () => {
       {
         mediaType: 'photo',
       },
-      (response) => {
+      response => {
         console.log('Image picker response:', response);
         if (response.didCancel) {
           console.log('User cancelled image picker');
@@ -34,7 +35,7 @@ const AddPost = () => {
         ) {
           setImageUri(response.assets[0].uri);
         }
-      }
+      },
     );
   };
 
@@ -43,11 +44,11 @@ const AddPost = () => {
       Alert.alert('Please select an image and enter a content.');
       return;
     }
-  
+
     // Improved file type extraction
     const fileType = imageUri.split('.').pop();
     const mimeType = `image/${fileType}`; // Ensure it is image/jpeg, image/png, etc.
-  
+
     const formData = new FormData();
     formData.append('image', {
       uri: imageUri,
@@ -55,13 +56,13 @@ const AddPost = () => {
       name: `photo.${fileType}`,
     });
     formData.append('content', content);
-  
+
     const token = await AsyncStorage.getItem('token');
     if (!token) {
       console.error('No token found');
       return;
     }
-  
+
     try {
       const response = await fetch('http://3.110.47.11:5000/create-post', {
         method: 'POST',
@@ -70,7 +71,7 @@ const AddPost = () => {
         },
         body: formData,
       });
-  
+
       const responseData = await response.json();
       if (response.ok) {
         Alert.alert('Post uploaded successfully!');
@@ -78,19 +79,21 @@ const AddPost = () => {
         setcontent('');
       } else {
         console.error('Error response from server:', responseData);
-        Alert.alert('Failed to upload post. Please check server logs.', responseData);
+        Alert.alert(
+          'Failed to upload post. Please check server logs.',
+          responseData,
+        );
         setImageUri(null);
         setcontent('');
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.error('Upload failed:', error.message);
       Alert.alert('Failed to upload post. Please try again.');
       setImageUri(null);
       setcontent('');
     }
   };
-  
-  
+
   return (
     <View>
       <View style={styles.header}>
@@ -100,7 +103,7 @@ const AddPost = () => {
         />
       </View>
       <View>
-        <Text style={{ fontSize: 22, fontWeight: '600', textAlign: 'center' }}>
+        <Text style={{fontSize: 22, fontWeight: '600', textAlign: 'center'}}>
           Add Post
         </Text>
         <View style={styles.inputContainer}>
@@ -116,8 +119,22 @@ const AddPost = () => {
         </View>
       </View>
       <View style={styles.buttonContainer}>
-        <Button title="Pick an image" onPress={pickImage} />
-        {imageUri && <Image source={{ uri: imageUri }} style={styles.imagePreview} />}
+        <View
+          style={{ alignSelf:'flex-end',padding:10}}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'transparent',
+              borderWidth: 1,
+              width: 150,
+              padding: 10,
+              borderRadius: 30,
+            }} onPress={pickImage}>
+            <Text style={{textAlign: 'center'}}>Pick Image</Text>
+          </TouchableOpacity>
+        </View>
+        {imageUri && (
+          <Image source={{uri: imageUri}} style={styles.imagePreview} />
+        )}
         <Button title="Upload Post" onPress={uploadPost} />
       </View>
     </View>

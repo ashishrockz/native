@@ -10,10 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState,useRef} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert} from 'react-native';
-
 interface SettingsProps {
   logout: () => void;
 }
@@ -34,7 +33,6 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // To manage loading state
   const [post, setPost] = useState<Post[]>([]);
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -180,7 +178,13 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
     }
   };
   if (loading) {
-    return <ActivityIndicator  style={{flex:1,justifyContent:"center"}}size="small" color="#0000ff" />;
+    return (
+      <ActivityIndicator
+        style={{flex: 1, justifyContent: 'center'}}
+        size="small"
+        color="#0000ff"
+      />
+    );
   }
 
   return (
@@ -285,7 +289,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
               </View>
             </ScrollView>
           </View>
-          <View style={{height: '63.5%'}}>
+          <View style={{height: '66.5%'}}>
             {/* <View>
               <Text>Posts</Text>
             </View> */}
@@ -295,7 +299,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
               renderItem={({item}) => (
                 <View style={styles.postContainer}>
                   <View style={styles.postHeader}>
-                    <View style={{flexDirection:'row',alignItems:'center'}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
                       <Image
                         source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
                         style={styles.profileImage}
@@ -304,13 +308,20 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                         {user?.username || 'Unknown User'}
                       </Text>
                     </View>
-                    <View style={{width:100,flexDirection:'row',alignItems:'center', justifyContent:"space-between"}}>
-                      <TouchableOpacity
-                        onPress={() => handleEdit(item._id, 'New content')}>
-                        <Text >Edit</Text>
+                    <View
+                      style={{
+                        width: 100,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}>
+                      <TouchableOpacity 
+                        onPress={() => handleEdit(item._id, 'New content')}
+                        >
+                        <Text>Edit</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity  onPress={() => handleDelete(item._id)}>
-                        <Text >Delete</Text>
+                      <TouchableOpacity onPress={() => handleDelete(item._id)}>
+                        <Text>Delete</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -349,7 +360,6 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                         source={require('../assets/Posts/save.png')}
                         style={styles.actionIcon}
                       />
-                      <Text>Save</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -411,19 +421,18 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   postContainer: {
-    paddingTop:10,
-    paddingBottom:10,
-    backgroundColor: '#ffffff',
-    elevation: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    // backgroundColor: '#ffffff',
     borderRadius: 10,
     marginTop: 10,
   },
   postHeader: {
-    paddingLeft:5,
-    paddingRight:10,
+    paddingLeft: 5,
+    paddingRight: 10,
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent:'space-between'
+    justifyContent: 'space-between',
   },
   profileImage: {
     width: 50,
@@ -459,5 +468,16 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 25,
     height: 25,
+  },
+  panel: {
+    padding: 20,
+  },
+  panelContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  panelText: {
+    fontSize: 18,
+    marginBottom: 20,
   },
 });

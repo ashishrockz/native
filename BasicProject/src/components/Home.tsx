@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -9,6 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation, NavigationProp} from '@react-navigation/native';
+import {RootStackParamLists} from '../models/navtypes'; // Import your routes type
 
 interface User {
   _id: string;
@@ -23,19 +25,22 @@ interface Post {
   likes: string[];
   comments: string[];
 }
+
 const Home: React.FC = () => {
   const [post, setPost] = useState<Post[]>([]);
+
+  // Use the navigation prop with your defined routes type
+  const navigation = useNavigation<NavigationProp<RootStackParamLists>>();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        // Get the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
         if (!token) {
           console.error('No token found');
           return;
         }
-  
+
         const response = await fetch(
           'https://backend-api-social.vercel.app/all',
           {
@@ -45,39 +50,35 @@ const Home: React.FC = () => {
             },
           },
         );
-  
+
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
-  
+
         const data: Post[] = await response.json();
-        // console.log('Fetched user posts:', data); // Debug log
         setPost(data);
       } catch (error: any) {
         Alert.alert('Error', 'Failed to fetch posts. Please try again later.');
       }
     };
-  
-    // Initial fetch of posts
+
     fetchPosts();
-  
-    // Set interval to fetch posts every 10 seconds
     const interval = setInterval(() => {
       fetchPosts();
-    }, 10000); // 10000ms = 10 seconds
-  
-    // Cleanup function to clear the interval when the component unmounts
+    }, 10000);
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return (
-    <View style={{padding: 10, backgroundColor: '#f1f1f1',height:'99.5%'}}>
+    <View style={{backgroundColor: '#f1f1f1', height: '99.9%'}}>
       <View style={styles.header}>
         <Image
           source={require('../assets/Posts/logo.png')}
           style={styles.logo}
         />
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Add',{screen: 'AddPost'})}>
           <Image
             source={require('../assets/Posts/add.png')}
             style={styles.addIcon}
@@ -91,7 +92,7 @@ const Home: React.FC = () => {
           <View style={styles.postContainer}>
             <View style={styles.postHeader}>
               <Image
-                source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
+                source={require('../assets/profile/3.jpeg')}
                 style={styles.profileImage}
               />
               <Text style={styles.username}>
@@ -104,7 +105,7 @@ const Home: React.FC = () => {
               </View>
             ) : null}
             <View style={styles.postContent}>
-              <Text>{item.content}</Text>
+              <Text style={{fontSize: 17}}>{item.content}</Text>
             </View>
             <View style={styles.postActions}>
               <TouchableOpacity style={styles.actionButton}>
@@ -112,21 +113,24 @@ const Home: React.FC = () => {
                   source={require('../assets/Posts/love.png')}
                   style={styles.actionIcon}
                 />
-                <Text style={{paddingLeft:5,fontSize:18}}>{item.likes?.length || 0}</Text>
+                <Text style={{paddingLeft: 5, fontSize: 18}}>
+                  {item.likes?.length || 0}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
                 <Image
                   source={require('../assets/Posts/chat.png')}
                   style={styles.actionIcon}
                 />
-                <Text style={{paddingLeft:5,fontSize:18}}>{item.comments?.length || 0}</Text>
+                <Text style={{paddingLeft: 5, fontSize: 18}}>
+                  {item.comments?.length || 0}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
                 <Image
                   source={require('../assets/Posts/save.png')}
                   style={styles.actionIcon}
                 />
-                <Text>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -154,15 +158,13 @@ const styles = StyleSheet.create({
     height: 25,
   },
   postContainer: {
-    paddingTop:10,
-    paddingBottom:10,
-    backgroundColor: '#ffffff',
-    elevation: 20,
+    paddingTop: 10,
+    // backgroundColor: '#ffffff',
     borderRadius: 10,
     marginTop: 10,
   },
   postHeader: {
-    paddingLeft:20,
+    paddingLeft: 10,
     alignItems: 'center',
     flexDirection: 'row',
   },

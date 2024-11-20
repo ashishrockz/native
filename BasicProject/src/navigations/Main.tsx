@@ -6,12 +6,25 @@ import Settings from '../components/Settings';
 import { Image } from 'react-native';
 import Search from '../components/Search';
 import AddPost from '../components/AddPost';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 interface MainProps {
   logout: () => void;
 }
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
+// Define Stack Navigation for `AddPost`
+const AddPostStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="AddPost"
+      component={AddPost}
+      options={{ headerShown: false }}
+    />
+    {/* Add more screens if needed */}
+  </Stack.Navigator>
+);
 const Main: React.FC<MainProps> = ({logout}) => {
   return (
     <NavigationContainer>
@@ -52,7 +65,7 @@ const Main: React.FC<MainProps> = ({logout}) => {
         />
       <Tab.Screen
           name="Add"
-          component={AddPost}
+          component={AddPostStack}
         />
         <Tab.Screen name="Profile">
           {() => <Settings logout={logout} />}
