@@ -23,7 +23,7 @@ const Signup = ({navigation}: any) => {
     }
   
     try {
-      const response = await axios.post('https://backend-api-social.vercel.app/auth/signup', {
+      const response = await axios.post('http://3.110.47.11:5000/auth/signup', {
         username,
         email,
         password,
@@ -65,6 +65,7 @@ const Signup = ({navigation}: any) => {
           <TextInput
             style={styles.input_style}
             placeholder="Enter username"
+            placeholderTextColor={'black'}
             value={username}
             onChangeText={setFullNmae}
           />
@@ -74,6 +75,7 @@ const Signup = ({navigation}: any) => {
           <TextInput
             style={styles.input_style}
             placeholder="Enter E-Mail"
+            placeholderTextColor={'black'}
             value={email}
             onChangeText={setEmail}
           />
@@ -83,6 +85,7 @@ const Signup = ({navigation}: any) => {
           <TextInput
             style={styles.input_style}
             placeholder="Enter Password"
+            placeholderTextColor={'black'}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -93,6 +96,7 @@ const Signup = ({navigation}: any) => {
           <TextInput
             style={styles.input_style}
             placeholder="Re Enter Password"
+            placeholderTextColor={'black'}
             value={conf_password}
             onChangeText={setConformPass}
             secureTextEntry
@@ -157,6 +161,7 @@ const styles = StyleSheet.create({
     borderColor: '#F2F2F2',
     fontSize: 18,
     padding: 10,
+    color:'black'
   },
   button: {
     backgroundColor: '#2B8761',

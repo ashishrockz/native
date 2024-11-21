@@ -36,7 +36,7 @@ const Login = ({navigation}: any) => {
     try {
       if (Object.keys(validationErrors).length === 0) {
         const response = await axios.post(
-          'https://backend-api-social.vercel.app/auth/login',
+          'http://3.110.47.11:5000/auth/login',
           {
             email,
             password,
@@ -73,6 +73,7 @@ const Login = ({navigation}: any) => {
           <TextInput
             style={styles.input_style}
             placeholder="Enter E-Mail"
+            placeholderTextColor={'black'}
             value={email}
             onChangeText={setEmail}
           />
@@ -84,6 +85,7 @@ const Login = ({navigation}: any) => {
             style={styles.input_style}
             placeholder="Enter Password"
             value={password}
+            placeholderTextColor={'black'}
             onChangeText={setPassword}
             secureTextEntry
           />
@@ -166,7 +168,8 @@ const styles = StyleSheet.create({
     borderColor: '#F2F2F2',
     fontSize: 18,
     padding: 10,
-    color:'black'
+    color:'black',
+  
   },
   button: {
     backgroundColor: '#2B8761',

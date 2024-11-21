@@ -2,17 +2,21 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert} from 'react-native';
+import BottomSheet, {BottomSheetMethods} from '@devvie/bottom-sheet';
+
 interface SettingsProps {
   logout: () => void;
 }
@@ -33,6 +37,10 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // To manage loading state
   const [post, setPost] = useState<Post[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState<string>(''); // State for edited content
+  const sheetRef = useRef<BottomSheetMethods>(null);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -308,20 +316,17 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                         {user?.username || 'Unknown User'}
                       </Text>
                     </View>
-                    <View
-                      style={{
-                        width: 100,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}>
-                      <TouchableOpacity 
-                        onPress={() => handleEdit(item._id, 'New content')}
-                        >
-                        <Text>Edit</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDelete(item._id)}>
-                        <Text>Delete</Text>
+                    <View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSelectedPostId(item._id);
+                          setEditContent(item.content);
+                          sheetRef.current?.open();
+                        }}>
+                        <Image
+                          style={{width: 30, height: 30}}
+                          source={require('../assets/more.png')}
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -365,6 +370,30 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                 </View>
               )}
             />
+            <BottomSheet ref={sheetRef} height={200}>
+              <ScrollView contentContainerStyle={{paddingBottom: 50}}>
+                <KeyboardAvoidingView behavior="padding">
+                  <Text>Edit Post</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editContent}
+                    onChangeText={setEditContent}
+                    placeholder="Edit your post"
+                  />
+                  {/* Call handleEdit with postId and the new content */}
+                  <TouchableOpacity
+                    onPress={() => handleEdit(selectedPostId!, editContent)}>
+                    <Text>Update Post</Text>
+                  </TouchableOpacity>
+                  {/* Call handleDelete with postId */}
+                  <TouchableOpacity
+                    style={[styles.deleteButton, {backgroundColor: 'red'}]}
+                    onPress={() => handleDelete(selectedPostId!)}>
+                    <Text style={{color: 'white'}}>Delete Post</Text>
+                  </TouchableOpacity>
+                </KeyboardAvoidingView>
+              </ScrollView>
+            </BottomSheet>
           </View>
         </View>
       ) : (
@@ -479,5 +508,23 @@ const styles = StyleSheet.create({
   panelText: {
     fontSize: 18,
     marginBottom: 20,
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    alignItems: 'center',
+    borderRadius: 5,
+    marginTop: 30,
+  },
+  inputContainer: {
+    padding: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  textInput: {
+    borderBottomWidth: 1,
+    fontSize: 18,
+    color: 'black',
+    width: '95%',
   },
 });
