@@ -53,7 +53,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
         // Fetch user data from API with token in Authorization header
         const response = await fetch(
-          'https://backend-api-social.vercel.app/auth/me',
+          'https://socialaws.vercel.app/auth/me',
           {
             method: 'GET',
             headers: {
@@ -90,7 +90,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
         // Adjust the API endpoint to fetch posts by user ID
         const response = await fetch(
-          `https://backend-api-social.vercel.app/user`,
+          `https://socialaws.vercel.app/user`,
           {
             method: 'GET',
             headers: {
@@ -128,7 +128,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
     try {
       const response = await fetch(
-        `https://backend-api-social.vercel.app/edit/${postId}`,
+        `https://socialaws.vercel.app/edit/${postId}`,
         {
           method: 'PUT',
           headers: {
@@ -165,7 +165,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
     try {
       const response = await fetch(
-        `https://backend-api-social.vercel.app/delete/${postId}`,
+        `https://socialaws.vercel.app/delete/${postId}`,
         {
           method: 'DELETE',
           headers: {
@@ -197,7 +197,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between',padding: 10,}}>
         {/* <TouchableOpacity style={styles.back}>
           <Image
             source={require('../assets/back.png')}
@@ -297,7 +297,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
               </View>
             </ScrollView>
           </View>
-          <View style={{height: '66.5%'}}>
+          <View style={{height: '63.5%'}}>
             {/* <View>
               <Text>Posts</Text>
             </View> */}
@@ -370,27 +370,49 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                 </View>
               )}
             />
-            <BottomSheet ref={sheetRef} height={200}>
-              <ScrollView contentContainerStyle={{paddingBottom: 50}}>
+            <BottomSheet ref={sheetRef} height={250}>
+              <ScrollView contentContainerStyle={{paddingBottom: 50,padding:10}}>
                 <KeyboardAvoidingView behavior="padding">
-                  <Text>Edit Post</Text>
+                  <Text style={{fontSize: 18,color:'black',textAlign:'center'}}>Edit Post</Text>
                   <TextInput
+                    multiline={true}
+                    numberOfLines={4}
                     style={styles.textInput}
                     value={editContent}
                     onChangeText={setEditContent}
                     placeholder="Edit your post"
                   />
                   {/* Call handleEdit with postId and the new content */}
-                  <TouchableOpacity
-                    onPress={() => handleEdit(selectedPostId!, editContent)}>
-                    <Text>Update Post</Text>
-                  </TouchableOpacity>
-                  {/* Call handleDelete with postId */}
-                  <TouchableOpacity
-                    style={[styles.deleteButton, {backgroundColor: 'red'}]}
-                    onPress={() => handleDelete(selectedPostId!)}>
-                    <Text style={{color: 'white'}}>Delete Post</Text>
-                  </TouchableOpacity>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      padding: 10,
+                      justifyContent: 'space-between',
+                    }}>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'green',
+                        padding: 10,
+                        borderRadius: 20,
+                      }}
+                      onPress={() => handleEdit(selectedPostId!, editContent)}>
+                      <Text style={{color: 'white', fontSize: 17}}>
+                        Update Post
+                      </Text>
+                    </TouchableOpacity>
+                    {/* Call handleDelete with postId */}
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'red',
+                        padding: 10,
+                        borderRadius: 20,
+                      }}
+                      onPress={() => handleDelete(selectedPostId!)}>
+                      <Text style={{color: 'white', fontSize: 17}}>
+                        Delete Post
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </KeyboardAvoidingView>
               </ScrollView>
             </BottomSheet>
@@ -409,7 +431,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    padding: 10,
+    // padding: 10,
   },
   back: {
     alignItems: 'center',
@@ -451,6 +473,8 @@ const styles = StyleSheet.create({
   },
   postContainer: {
     paddingTop: 10,
+        padding: 10,
+
     paddingBottom: 10,
     // backgroundColor: '#ffffff',
     borderRadius: 10,

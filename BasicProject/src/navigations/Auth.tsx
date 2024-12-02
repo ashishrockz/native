@@ -1,10 +1,10 @@
 import {View, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
-import Login from '../auth_components/Login';
+import Login from '../auth_components/componets/Login';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
-import Signup from '../auth_components/Signup';
-import Home from '../auth_components/Home1';
+import Signup from '../auth_components/componets/Signup';
+import Home from '../auth_components/componets/Home1';
 const Stack = createNativeStackNavigator();
 const Auth = () => {
   return (
