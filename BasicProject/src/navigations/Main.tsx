@@ -50,7 +50,7 @@ const Main: React.FC<MainProps> = ({logout}) => {
             }
             return<Image
             source={iconSource}
-            style={{ width: 25, height: 25, tintColor: focused ? 'grey' : '#ffffff' }}
+            style={{ width: 25, height: 25, tintColor: focused ? 'black' : '#ffffff' }}
           />
           },
         })}

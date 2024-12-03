@@ -3,7 +3,6 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
-  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -23,6 +22,14 @@ interface SettingsProps {
 interface User {
   _id: string;
   username: string;
+  fullname: string;
+}
+
+interface Comment {
+  _id: string;
+  user: User;
+  content: string;
+  createdAt: string;
 }
 
 interface Post {
@@ -37,9 +44,12 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true); // To manage loading state
   const [post, setPost] = useState<Post[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>(''); // State for edited content
   const sheetRef = useRef<BottomSheetMethods>(null);
+  const commentSheetRef = useRef<BottomSheetMethods>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,15 +62,12 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
         }
 
         // Fetch user data from API with token in Authorization header
-        const response = await fetch(
-          'https://socialaws.vercel.app/auth/me',
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch('https://socialaws.vercel.app/auth/me', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -89,15 +96,12 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
         }
 
         // Adjust the API endpoint to fetch posts by user ID
-        const response = await fetch(
-          `https://socialaws.vercel.app/user`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`https://socialaws.vercel.app/user`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -185,6 +189,106 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
       Alert.alert('Error', 'Failed to delete post');
     }
   };
+  const fetchComments = async (postId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
+      console.log('Fetching comments for postId:', postId);
+
+      const response = await fetch(
+        `https://socialaws.vercel.app/comments/${postId}`,
+        {
+          method: 'GET',
+          headers: {Authorization: `Bearer ${token}`},
+        },
+      );
+
+      const responseText = await response.text(); // Log raw response text
+      console.log('Raw Response:', responseText);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
+        throw new Error(errorData.error || `Error: ${response.status}`);
+      }
+
+      const data: Comment[] = JSON.parse(responseText); // Parse the response
+      setComments(data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      Alert.alert('Error', 'Failed to fetch comments.');
+    }
+  };
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token || !selectedPostId) return;
+
+      const response = await fetch('https://socialaws.vercel.app/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({postId: selectedPostId, content: newComment}),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      const addedComment: Comment = await response.json();
+      setComments(prev => [addedComment, ...prev]);
+      setNewComment('');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add comment.');
+    }
+  };
+  const toggleLike = async (postId: string) => {
+    if (!user) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+      const response = await fetch('https://socialaws.vercel.app/likes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({postId}),
+      });
+
+      // Log the raw response text
+      const responseText = await response.text();
+      console.log('Raw Response:', responseText);
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${responseText}`);
+      }
+
+      // Parse JSON after confirming it's valid
+      const updatedPost = JSON.parse(responseText);
+      console.log('Updated Post:', updatedPost);
+      setPost(prevPosts =>
+        prevPosts.map(post =>
+          post._id === updatedPost._id ? updatedPost : post,
+        ),
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      Alert.alert('Error', 'Failed to toggle like. Please try again.');
+    }
+  };
   if (loading) {
     return (
       <ActivityIndicator
@@ -197,7 +301,12 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between',padding: 10,}}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          padding: 10,
+        }}>
         {/* <TouchableOpacity style={styles.back}>
           <Image
             source={require('../assets/back.png')}
@@ -225,7 +334,7 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
             <View style={styles.profilecontainer}>
               <Image
                 source={require('../assets/profile/3.jpeg')}
-                style={{width: 70, height: 70, borderRadius: 50}}
+                style={{width: 50, height: 50, borderRadius: 50}}
               />
             </View>
             <View style={styles.fololwer_text}>
@@ -262,6 +371,8 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
               <Text style={{fontSize: 13, textAlign: 'center'}}>Posts</Text>
             </View>
           </View>
+          <Text style={{paddingLeft: 20, fontSize: 16}}>{user.fullname}</Text>
+
           <View style={styles.highilets}>
             <Text>Highligts</Text>
             <ScrollView horizontal={true} style={styles.highilets1}>
@@ -301,79 +412,100 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
             {/* <View>
               <Text>Posts</Text>
             </View> */}
-            <FlatList
-              data={post}
-              keyExtractor={item => item._id}
-              renderItem={({item}) => (
-                <View style={styles.postContainer}>
-                  <View style={styles.postHeader}>
-                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                      <Image
-                        source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
-                        style={styles.profileImage}
-                      />
-                      <Text style={styles.username}>
-                        {user?.username || 'Unknown User'}
-                      </Text>
+            {post.length > 0 ? (
+              <FlatList
+                data={post}
+                keyExtractor={item => item._id}
+                renderItem={({item}) => (
+                  <View style={styles.postContainer}>
+                    <View style={styles.postHeader}>
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Image
+                          source={require('../assets/profile/3.jpeg')} // Replace with user's profile image if available
+                          style={styles.profileImage}
+                        />
+                        <Text style={styles.username}>
+                          {user?.username || 'Unknown User'}
+                        </Text>
+                      </View>
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedPostId(item._id);
+                            setEditContent(item.content);
+                            sheetRef.current?.open();
+                          }}>
+                          <Image
+                            style={{width: 30, height: 30}}
+                            source={require('../assets/more.png')}
+                          />
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                    <View>
+                    {item.imageUrl ? (
+                      <View style={styles.postImageContainer}>
+                        <Image
+                          source={{uri: item.imageUrl}}
+                          style={styles.postImage}
+                        />
+                      </View>
+                    ) : null}
+                    <View style={styles.postContent}>
+                      <Text>{item.content}</Text>
+                    </View>
+                    <View style={styles.postActions}>
                       <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => toggleLike(item._id)}>
+                        <Image
+                          source={
+                            item.likes.includes(user || '')
+                              ? require('../assets/Posts/liked.png')
+                              : require('../assets/Posts/love.png')
+                          }
+                          style={styles.actionIcon}
+                        />
+                        <Text style={{paddingLeft: 5, fontSize: 18}}>
+                          {item.likes?.length || 0}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionButton}
                         onPress={() => {
                           setSelectedPostId(item._id);
-                          setEditContent(item.content);
-                          sheetRef.current?.open();
+                          fetchComments(item._id);
+                          commentSheetRef.current?.open();
                         }}>
                         <Image
-                          style={{width: 30, height: 30}}
-                          source={require('../assets/more.png')}
+                          source={require('../assets/Posts/chat.png')}
+                          style={styles.actionIcon}
+                        />
+                        <Text style={{paddingLeft: 5, fontSize: 18}}>
+                          {item.comments.length}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.actionButton}>
+                        <Image
+                          source={require('../assets/Posts/save.png')}
+                          style={styles.actionIcon}
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {item.imageUrl ? (
-                    <View style={styles.postImageContainer}>
-                      <Image
-                        source={{uri: item.imageUrl}}
-                        style={styles.postImage}
-                      />
-                    </View>
-                  ) : null}
-                  <View style={styles.postContent}>
-                    <Text>{item.content}</Text>
-                  </View>
-                  <View style={styles.postActions}>
-                    <TouchableOpacity style={styles.actionButton}>
-                      <Image
-                        source={require('../assets/Posts/love.png')}
-                        style={styles.actionIcon}
-                      />
-                      <Text style={{paddingLeft: 5, fontSize: 18}}>
-                        {item.likes?.length || 0}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionButton}>
-                      <Image
-                        source={require('../assets/Posts/chat.png')}
-                        style={styles.actionIcon}
-                      />
-                      <Text style={{paddingLeft: 5, fontSize: 18}}>
-                        {item.comments?.length || 0}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionButton}>
-                      <Image
-                        source={require('../assets/Posts/save.png')}
-                        style={styles.actionIcon}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            />
+                )}
+              />
+            ) : (
+              <Text>No Content</Text>
+            )}
             <BottomSheet ref={sheetRef} height={250}>
-              <ScrollView contentContainerStyle={{paddingBottom: 50,padding:10}}>
+              <ScrollView
+                contentContainerStyle={{paddingBottom: 50, padding: 10}}>
                 <KeyboardAvoidingView behavior="padding">
-                  <Text style={{fontSize: 18,color:'black',textAlign:'center'}}>Edit Post</Text>
+                  <Text
+                    style={{fontSize: 18, color: 'black', textAlign: 'center'}}>
+                    Edit Post
+                  </Text>
                   <TextInput
                     multiline={true}
                     numberOfLines={4}
@@ -415,6 +547,57 @@ const Settings: React.FC<SettingsProps> = ({logout}) => {
                   </View>
                 </KeyboardAvoidingView>
               </ScrollView>
+            </BottomSheet>
+            <BottomSheet ref={commentSheetRef} height={450}>
+              <SafeAreaView style={{paddingBottom: 50, padding: 10}}>
+                <Text
+                  style={{fontSize: 18, color: 'black', textAlign: 'center'}}>
+                  Comments
+                </Text>
+                <FlatList
+                  data={comments}
+                  keyExtractor={item => item._id}
+                  renderItem={({item}) => (
+                    <View style={{flexDirection: 'row', marginBottom: 10}}>
+                      <Text style={{fontWeight: 'bold'}}>
+                        {item.user.username}:
+                      </Text>
+                      <Text> {item.content}</Text>
+                    </View>
+                  )}
+                />
+                <View style={{flexDirection: 'row'}}>
+                  <View style={styles.postHeader}>
+                    <Image
+                      source={require('../assets/profile/3.jpeg')}
+                      style={styles.profileImage}
+                    />
+                  </View>
+                  <View style={{justifyContent: 'flex-end'}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <TextInput
+                        multiline={true}
+                        numberOfLines={2}
+                        placeholderTextColor={'black'}
+                        value={newComment}
+                        placeholder="Add a comment..."
+                        onChangeText={setNewComment}
+                        style={{
+                          width: '85%',
+                          borderBottomWidth: 1,
+                          fontSize: 17,
+                        }}
+                      />
+                      <TouchableOpacity onPress={addComment}>
+                        <Image
+                          source={require('../assets/send.png')}
+                          style={{width: 20, height: 20}}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </SafeAreaView>
             </BottomSheet>
           </View>
         </View>
@@ -473,7 +656,7 @@ const styles = StyleSheet.create({
   },
   postContainer: {
     paddingTop: 10,
-        padding: 10,
+    padding: 10,
 
     paddingBottom: 10,
     // backgroundColor: '#ffffff',

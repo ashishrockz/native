@@ -7,14 +7,17 @@ import {
   TextInput,
   View,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Search = () => {
-  const [users, setUsers] = useState<any[]>([]); // State to store user data
+  const [users, setUsers] = useState<any[]>([]); // State to store all user data
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]); // State for filtered user data
   const [loading, setLoading] = useState(true); // Loading state
+  const [searchText, setSearchText] = useState(''); // Search text state
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -35,9 +38,9 @@ const Search = () => {
           }
         );
 
-        setUsers(response.data); // Set the users in state
+        setUsers(response.data); // Set all users in state
+        setFilteredUsers(response.data); // Initialize filtered users with all users
         console.log('Fetched users:', response.data); // Debugging log
-
       } catch (err) {
         console.log('Error fetching users:', err); // Handle errors
       } finally {
@@ -48,8 +51,29 @@ const Search = () => {
     fetchUsers();
   }, []);
 
+  // Debounced search function
+  const handleSearch = useCallback(
+    debounce((text: string) => {
+      const lowercasedText = text.toLowerCase();
+      const filtered = users.filter((user) =>
+        user.username.toLowerCase().includes(lowercasedText)
+      );
+      setFilteredUsers(filtered);
+    }, 300),
+    [users]
+  );
+
+  const handleInputChange = (text: string) => {
+    setSearchText(text);
+    handleSearch(text); // Call the debounced search function
+  };
+
   if (loading) {
-    return <Text>Loading...</Text>; // Show loading state
+    return <ActivityIndicator
+    style={{flex: 1, justifyContent: 'center'}}
+    size="small"
+    color="#0000ff"
+  />
   }
 
   return (
@@ -65,17 +89,26 @@ const Search = () => {
           source={require('../assets/Posts/search.png')}
           style={{ width: 25, height: 25 }}
         />
-        <TextInput style={styles.search_input} placeholderTextColor={'black'}  placeholder="Search users..." />
-        <TouchableOpacity>
+        <TextInput
+          style={styles.search_input}
+          placeholderTextColor={'black'}
+          placeholder="Search users..."
+          value={searchText}
+          onChangeText={handleInputChange}
+        />
+        <TouchableOpacity onPress={() => handleInputChange('')}>
           <Image
             source={require('../assets/Posts/remove.png')}
             style={{ width: 20, height: 20 }}
           />
         </TouchableOpacity>
       </View>
+      {filteredUsers.length >  0 ?(
       <FlatList
-        data={users} // User data to render
-        keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
+        data={filteredUsers} // Render filtered user data
+        keyExtractor={(item, index) =>
+          item.id ? item.id.toString() : index.toString()
+        }
         renderItem={({ item }) => (
           <View style={styles.userCard}>
             <View>
@@ -97,9 +130,19 @@ const Search = () => {
             </View>
           </View>
         )}
-      />
+      />):(
+        <Text>No User found</Text>
+      )}
     </SafeAreaView>
   );
+};
+
+const debounce = (func: Function, delay: number) => {
+  let timer: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
 };
 
 const styles = StyleSheet.create({
@@ -125,14 +168,13 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     flexDirection: 'row',
     marginBottom: 10,
-    color:'black'
-
+    color: 'black',
   },
   search_input: {
     width: '85%',
     height: 40,
     fontSize: 17,
-    color:'black'
+    color: 'black',
   },
   userCard: {
     flexDirection: 'row',

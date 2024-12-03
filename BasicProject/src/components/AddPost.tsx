@@ -64,7 +64,7 @@ const AddPost = () => {
     }
 
     try {
-      const response = await fetch('http://3.110.47.11:5000/create-post', {
+      const response = await fetch('http://13.127.133.146:5000/create-post', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

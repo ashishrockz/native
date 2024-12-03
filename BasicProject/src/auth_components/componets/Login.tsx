@@ -56,7 +56,6 @@ const Login = ({navigation}: any) => {
           navigation.navigate('Signup');
         }
         Alert.alert(error.response.data.message || 'Login failed');
-        setEmail('');
         setPassword('');
       }
     }

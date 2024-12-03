@@ -7,19 +7,26 @@ import {
   Text,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  ScrollView,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {jwtDecode} from 'jwt-decode'; // Correct import for jwt-decode
+import {jwtDecode} from 'jwt-decode'; // Correct import
 import {useNavigation, NavigationProp} from '@react-navigation/native';
-import {RootStackParamLists} from '../models/navtypes'; // Import your routes type
+import {RootStackParamLists} from '../models/navtypes';
 import BottomSheet, {BottomSheetMethods} from '@devvie/bottom-sheet';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface User {
   _id: string;
   username: string;
+}
+
+interface Comment {
+  _id: string;
+  user: User;
+  content: string;
+  createdAt: string;
 }
 
 interface Post {
@@ -33,25 +40,26 @@ interface Post {
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [userId, setUserId] = useState<string | null>(null); // State to hold the logged-in user's ID
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
   const navigation = useNavigation<NavigationProp<RootStackParamLists>>();
   const sheetRef = useRef<BottomSheetMethods>(null);
 
-  // Fetch user ID from token
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const decoded: {id: string} = jwtDecode(token); // Decode the token
-          setUserId(decoded.id); // Set user ID
+          const decoded: {id: string} = jwtDecode(token);
+          setUserId(decoded.id);
         }
       } catch (error) {
         console.error('Error decoding token', error);
         Alert.alert('Error', 'Failed to fetch user information.');
       }
     };
-
     fetchUserId();
   }, []);
 
@@ -89,6 +97,65 @@ const Home: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const fetchComments = async (postId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+  
+      console.log('Fetching comments for postId:', postId);
+  
+      const response = await fetch(
+        `https://socialaws.vercel.app/comments/${postId}`,
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      const responseText = await response.text(); // Log raw response text
+      console.log('Raw Response:', responseText);
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
+        throw new Error(errorData.error || `Error: ${response.status}`);
+      }
+  
+      const data: Comment[] = JSON.parse(responseText); // Parse the response
+      setComments(data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      Alert.alert('Error', 'Failed to fetch comments.');
+    }
+  };  
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token || !selectedPostId) return;
+
+      const response = await fetch('https://socialaws.vercel.app/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({postId: selectedPostId, content: newComment}),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      const addedComment: Comment = await response.json();
+      setComments(prev => [addedComment, ...prev]);
+      setNewComment('');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add comment.');
+    }
+  };
   const toggleLike = async (postId: string) => {
     if (!userId) {
       Alert.alert('Error', 'User not authenticated');
@@ -121,7 +188,6 @@ const Home: React.FC = () => {
       // Parse JSON after confirming it's valid
       const updatedPost = JSON.parse(responseText);
       console.log('Updated Post:', updatedPost);
-
       setPosts(prevPosts =>
         prevPosts.map(post =>
           post._id === updatedPost._id ? updatedPost : post,
@@ -148,6 +214,7 @@ const Home: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
+      {posts.length > 0 ?(
       <FlatList
         data={posts}
         keyExtractor={item => item._id}
@@ -189,6 +256,8 @@ const Home: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => {
+                  setSelectedPostId(item._id);
+                  fetchComments(item._id);
                   sheetRef.current?.open();
                 }}>
                 <Image
@@ -196,7 +265,7 @@ const Home: React.FC = () => {
                   style={styles.actionIcon}
                 />
                 <Text style={{paddingLeft: 5, fontSize: 18}}>
-                  {item.comments?.length || 0}
+                  {item.comments.length }
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
@@ -208,12 +277,24 @@ const Home: React.FC = () => {
             </View>
           </View>
         )}
-      />
+      />):(<Text style={{fontSize: 18, color: 'black', textAlign: 'center',justifyContent:'center'}}>No Content add posts</Text>)}
       <BottomSheet ref={sheetRef} height={450}>
-        <ScrollView contentContainerStyle={{paddingBottom: 50, padding: 10}}>
+        <SafeAreaView style={{paddingBottom: 50, padding: 10}}>
             <Text style={{fontSize: 18, color: 'black', textAlign: 'center'}}>
               Comments
             </Text>
+            <FlatList
+              data={comments}
+              keyExtractor={item => item._id}
+              renderItem={({item}) => (
+                <View style={{flexDirection: 'row', marginBottom: 10}}>
+                  <Text style={{fontWeight: 'bold'}}>
+                    {item.user.username}:
+                  </Text>
+                  <Text> {item.content}</Text>
+                </View>
+              )}
+            />
             <View style={{flexDirection: 'row'}}>
               <View style={styles.postHeader}>
                 <Image
@@ -227,10 +308,12 @@ const Home: React.FC = () => {
                     multiline={true}
                     numberOfLines={2}
                     placeholderTextColor={'black'}
-                    placeholder="Add Coments..."
+                    value={newComment}
+              placeholder="Add a comment..."
+              onChangeText={setNewComment}
                     style={{width: '85%', borderBottomWidth: 1,fontSize:17}}
                   />
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={addComment}>
                     <Image
                       source={require('../assets/send.png')}
                       style={{width: 20, height: 20}}
@@ -239,8 +322,41 @@ const Home: React.FC = () => {
                 </View>
               </View>
             </View>
-        </ScrollView>
+        </SafeAreaView>
       </BottomSheet>
+      {/* <BottomSheet ref={sheetRef} height={450}>
+        <ScrollView contentContainerStyle={{paddingBottom: 50, padding: 10}}>
+          <View>
+            <Text style={{fontSize: 18, textAlign: 'center'}}>Comments</Text>
+            <FlatList
+              data={comments}
+              keyExtractor={item => item._id}
+              renderItem={({item}) => (
+                <View style={{flexDirection: 'row', marginBottom: 10}}>
+                  <Text style={{fontWeight: 'bold'}}>
+                    {item.user.username}:
+                  </Text>
+                  <Text> {item.content}</Text>
+                </View>
+              )}
+            />
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TextInput
+                style={{flex: 1, borderBottomWidth: 1, margin: 10}}
+                value={newComment}
+                placeholder="Add a comment..."
+                onChangeText={setNewComment}
+              />
+              <TouchableOpacity onPress={addComment}>
+                <Image
+                  source={require('../assets/send.png')}
+                  style={{width: 24, height: 24}}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </BottomSheet> */}
     </View>
   );
 };
